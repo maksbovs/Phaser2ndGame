@@ -41,7 +41,7 @@ function preload ()
     this.load.image('ground', 'assets/platform.png');
     this.load.image('star', 'assets/star.png');
     this.load.image('bomb', 'assets/bomb.png');
-    this.load.spritesheet('dude', 'assets/dude.png', { frameWidth: 32, frameHeight: 48 });
+    this.load.spritesheet('dude', 'assets/dude.png', { frameWidth: 30, frameHeight: 31 });
     this.load.image('replay', 'assets/replay.png'); // Завантажуємо зображення кнопки "Replay"
 
     this.load.audio('starSound', 'assets/sound.wav');
