@@ -135,6 +135,7 @@ function create() {
 
     starSound = this.sound.add('starSound');
     bombSound = this.sound.add('bombSound');
+
     replayButton = this.add.image(400, 300, 'replay').setInteractive();
     replayButton.setVisible(false);
     replayButton.on('pointerdown', resetGame, this);
@@ -247,23 +248,25 @@ function createMap() {
     trees.create(1100+y, 870, 'tree').setScale(1);
     trees.create(500+y, 740, 'tree2').setScale(1);
     trees.create(1500+y, 865, 'stone').setScale(1);
-
     platforms.create(600+y, 770, 'platform1');
     platforms.create(728+y, 770, 'platform2');
     platforms.create(856+y, 770, 'platform3');
 
-    platforms.create(1600+y, 750, 'platform1');
-    platforms.create(1728+y, 750, 'platform2');
-    platforms.create(1856+y, 750, 'platform3');
+    platforms.create(1600+y, 770, 'platform1');
+    platforms.create(1728+y, 770, 'platform2');
+    platforms.create(1856+y, 770, 'platform3');
 
-    platforms.create(1000+y, 550, 'platform1');
-    platforms.create(1128+y, 550, 'platform2');
-    platforms.create(1256+y, 550, 'platform3');
+    platforms.create(1000+y, 650, 'platform1');
+    platforms.create(1128+y, 650, 'platform2');
+    platforms.create(1256+y, 650, 'platform3');
 
-    platforms.create(400+y, 570, 'platform1');
-    platforms.create(528+y, 570, 'platform2');
-    platforms.create(656+y, 570, 'platform3');
+    platforms.create(200+y, 670, 'platform1');
+    platforms.create(328+y, 670, 'platform2');
+    platforms.create(456+y, 670, 'platform3');
     }
+    
+
+
     //platforms.create(600, 770, 'platform1');
     //platforms.create(700, 770, 'platform2');
     //platforms.create(800, 770, 'platform3');
