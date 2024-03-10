@@ -1,7 +1,7 @@
 var config = {
     type: Phaser.AUTO,
-    width: 800,
-    height: 600,
+    width: 1920,
+    height: 1080,
     physics: {
         default: 'arcade',
         arcade: {
@@ -15,7 +15,7 @@ var config = {
         update: update
     }
 };
-
+var game = new Phaser.Game(config);
 var player;
 var stars;
 var bombs;
@@ -27,52 +27,46 @@ var scoreText;
 var health = 100;
 var healthText;
 var healthBar;
-var game = new Phaser.Game(config);
 var starSound;
 var bombSound;
 var timer;
 var timerText;
 var startTime;
-var replayButton; // Додаємо змінну для кнопки "Replay"
+var replayButton;
+var worldWidth = 9600;
 
-function preload ()
-{
-    this.load.image('sky', 'assets/sky.png');
-    this.load.image('ground', 'assets/platform.png');
-    this.load.image('star', 'assets/star.png');
+function preload() {
+    this.load.image('sky', 'assets/fon1.jpg');
+    this.load.image('ground', 'assets/2.png');
+    this.load.image('star', 'assets/star.jpg');
     this.load.image('bomb', 'assets/bomb.png');
-    this.load.spritesheet('dude', 'assets/dude.png', { frameWidth: 30, frameHeight: 31 });
-    this.load.image('replay', 'assets/replay.png'); // Завантажуємо зображення кнопки "Replay"
+    this.load.spritesheet('dude', 'assets/dude.png', { frameWidth: 32, frameHeight: 48 });
+    this.load.image('replay', 'assets/replay.png');
 
     this.load.audio('starSound', 'assets/sound.wav');
     this.load.audio('bombSound', 'assets/bomb.mp3');
+    this.load.image('platform1', 'assets/13.png');
+    this.load.image('tree', 'assets/Tree_1.png');
+    this.load.image('tree2', 'assets/Tree_2.png');
+    this.load.image('platform2', 'assets/14.png');
+    this.load.image('platform3', 'assets/15.png');
+    this.load.image('stone', 'assets/Stone.png');
 }
 
-function create ()
-{
-    //  A simple background for our game
-    this.add.image(400, 300, 'sky');
+function create() {
+    this.add.tileSprite(0, 0, worldWidth, 1080, "sky").setOrigin(0, 0);
+    //this.add.image(0, 0, 'sky').setOrigin(0, 0);
 
-    //  The platforms group contains the ground and the 2 ledges we can jump on
     platforms = this.physics.add.staticGroup();
+    stones = this.physics.add.staticGroup();
+    trees = this.physics.add.staticGroup();
 
-    //  Here we create the ground.
-    //  Scale it to fit the width of the game (the original sprite is 400x32 in size)
-    platforms.create(400, 568, 'ground').setScale(2).refreshBody();
+    createMap();
 
-    //  Now let's create some ledges
-    platforms.create(600, 400, 'ground');
-    platforms.create(50, 250, 'ground');
-    platforms.create(750, 220, 'ground');
-
-    // The player and its settings
     player = this.physics.add.sprite(100, 450, 'dude');
-
-    //  Player physics properties. Give the little guy a slight bounce.
     player.setBounce(0.2);
     player.setCollideWorldBounds(true);
 
-    //  Our player animations, turning, walking left and walking right.
     this.anims.create({
         key: 'left',
         frames: this.anims.generateFrameNumbers('dude', { start: 0, end: 3 }),
@@ -82,7 +76,7 @@ function create ()
 
     this.anims.create({
         key: 'turn',
-        frames: [ { key: 'dude', frame: 4 } ],
+        frames: [{ key: 'dude', frame: 4 }],
         frameRate: 20
     });
 
@@ -92,30 +86,36 @@ function create ()
         frameRate: 10,
         repeat: -1
     });
+    
+    this.cameras.main.setBounds(0, 0, worldWidth, 1080);
+    this.physics.world.setBounds(0, 0, worldWidth, 1080);
+    this.cameras.main.startFollow(player);
 
-    //  Input Events
     cursors = this.input.keyboard.createCursorKeys();
 
     //  Some stars to collect, 12 in total, evenly spaced 70 pixels apart along the x axis
     stars = this.physics.add.group({
         key: 'star',
-        repeat: 11,
-        setXY: { x: 12, y: 0, stepX: 70 }
+        repeat: 96,
+        setXY: { x: 0, y: 0, stepX: 100 }
     });
 
     stars.children.iterate(function (child) {
-        child.setBounceY(Phaser.Math.FloatBetween(0.4, 0.8));
+        child.setBounceY(Phaser.Math.FloatBetween(.5, .8));
     });
+
+
+
+
+
 
     bombs = this.physics.add.group();
 
-    //  The score
     scoreText = this.add.text(16, 50, 'Score: 0', { fontSize: '32px', fill: '#000' });
     healthText = this.add.text(0, 0, '100%', { fontSize: '16px', fill: '#00ff00' });
     healthBar = this.add.graphics();
     updateHealthBar();
 
-    // Таймер
     startTime = new Date();
     timer = this.time.addEvent({
         delay: 1000,
@@ -126,50 +126,57 @@ function create ()
 
     timerText = this.add.text(700, 16, 'Time: 0', { fontSize: '32px', fill: '#000' });
 
-    //  Collide the player and the stars with the platforms
     this.physics.add.collider(player, platforms);
     this.physics.add.collider(stars, platforms);
     this.physics.add.collider(bombs, platforms);
 
-    //  Checks to see if the player overlaps with any of the stars, if he does call the collectStar function
     this.physics.add.overlap(player, stars, collectStar, null, this);
     this.physics.add.collider(player, bombs, hitBomb, null, this);
 
-    // Завантажуємо звуки
     starSound = this.sound.add('starSound');
     bombSound = this.sound.add('bombSound');
-
-    // Після створення гри, додаємо кнопку "Replay"
     replayButton = this.add.image(400, 300, 'replay').setInteractive();
-    replayButton.setVisible(false); // Починаємо з прихованою кнопкою "Replay"
+    replayButton.setVisible(false);
     replayButton.on('pointerdown', resetGame, this);
+    stars = this.physics.add.group({
+        key: 'star',
+        repeat: 12,
+        setXY: function (star, i) {
+            var x = (i + 1) * (worldWidth); // Distribute stars evenly across the worldWidth
+            var y = Phaser.Math.Between(50, 300); // Set a random y-coordinate
+            star.setXY(x, y);
+            return star;
+        }
+    });
+
+    stars.children.iterate(function (child) {
+        child.setBounceY(Phaser.Math.FloatBetween(0.4, 0.8));
+    });
+    
 }
 
-function update ()
-{
-    if (gameOver)
-    {
+
+
+
+
+
+function update() {
+    if (gameOver) {
         return;
     }
 
-    if (cursors.left.isDown)
-    {
+    if (cursors.left.isDown) {
         player.setVelocityX(-160);
         player.anims.play('left', true);
-    }
-    else if (cursors.right.isDown)
-    {
+    } else if (cursors.right.isDown) {
         player.setVelocityX(160);
         player.anims.play('right', true);
-    }
-    else
-    {
+    } else {
         player.setVelocityX(0);
         player.anims.play('turn');
     }
 
-    if (cursors.up.isDown && player.body.touching.down)
-    {
+    if (cursors.up.isDown && player.body.touching.down) {
         player.setVelocityY(-330);
     }
 
@@ -177,13 +184,12 @@ function update ()
     healthBar.setPosition(player.x - 20, player.y - 40);
 }
 
-function collectStar (player, star)
-{
+function collectStar(player, star) {
     star.disableBody(true, true);
     score += 10;
     scoreText.setText('Score: ' + score);
 
-    var x = (player.x < 400) ? Phaser.Math.Between(400, 800) : Phaser.Math.Between(0, 400);
+    var x = Phaser.Math.Between(0, worldWidth);
     var bomb = bombs.create(x, 16, 'bomb');
     bomb.setBounce(1);
     bomb.setCollideWorldBounds(true);
@@ -203,7 +209,7 @@ function hitBomb(player, bomb) {
         player.setTint(0xff0000);
         player.anims.play('turn');
         gameOver = true;
-        replayButton.setVisible(true); // Показуємо кнопку "Replay"
+        replayButton.setVisible(true);
     }
 }
 
@@ -216,7 +222,7 @@ function resetGame() {
     health = 100;
     updateHealthBar();
     gameOver = false;
-    replayButton.setVisible(false); // Приховуємо кнопку "Replay"
+    replayButton.setVisible(false);
     this.scene.restart();
 }
 
@@ -230,4 +236,47 @@ function updateHealthBar() {
 function updateTimer() {
     var elapsedTime = Math.floor((new Date() - startTime) / 1000);
     timerText.setText('Time: ' + elapsedTime);
+}
+
+function createMap() {
+    for (var x = 0; x < worldWidth; x = x + 128) {
+        platforms.create(x, 892, 'ground').setOrigin(0, 0).refreshBody();
+    }
+    for (var y = 0; y < worldWidth; y = y + 1920) {
+    console.log(y)
+    trees.create(1100+y, 870, 'tree').setScale(1);
+    trees.create(500+y, 740, 'tree2').setScale(1);
+    trees.create(1500+y, 865, 'stone').setScale(1);
+
+    platforms.create(600+y, 770, 'platform1');
+    platforms.create(728+y, 770, 'platform2');
+    platforms.create(856+y, 770, 'platform3');
+
+    platforms.create(1600+y, 750, 'platform1');
+    platforms.create(1728+y, 750, 'platform2');
+    platforms.create(1856+y, 750, 'platform3');
+
+    platforms.create(1000+y, 550, 'platform1');
+    platforms.create(1128+y, 550, 'platform2');
+    platforms.create(1256+y, 550, 'platform3');
+
+    platforms.create(400+y, 570, 'platform1');
+    platforms.create(528+y, 570, 'platform2');
+    platforms.create(656+y, 570, 'platform3');
+    }
+    //platforms.create(600, 770, 'platform1');
+    //platforms.create(700, 770, 'platform2');
+    //platforms.create(800, 770, 'platform3');
+    //platforms.create(1200, 600, 'platform3');
+    //platforms.create(1000, 600, 'platform1');
+    //platforms.create(1100, 600, 'platform2');
+    //platforms.create(600, 450, 'platform1');
+    //platforms.create(700, 450, 'platform2');
+    //platforms.create(800, 450, 'platform3');
+    //platforms.create(1400, 400, 'platform1');
+    //platforms.create(1500, 400, 'platform2');
+    //platforms.create(1600, 400, 'platform3');
+    //platforms.create(1200, 350, 'platform3');
+    //platforms.create(1000, 350, 'platform1');
+    //platforms.create(1100, 350, 'platform2');
 }
