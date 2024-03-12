@@ -37,13 +37,14 @@ var worldWidth = 9600;
 var pspeed=230;
 //
 var badGuy;
+//
 
 function preload() {
     this.load.image('sky', 'assets/fon1.jpg');
     this.load.image('ground', 'assets/2.png');
     this.load.image('star', 'assets/star.jpg');
     this.load.image('bomb', 'assets/bomb.png');
-    this.load.spritesheet('dude', 'assets/dude.png', { frameWidth: 32, frameHeight: 48 });
+    this.load.spritesheet('dude', 'assets/dude.png', { frameWidth: 71, frameHeight: 73 });
     //
     this.load.spritesheet('dude_angry', 'assets/dude_angry.png', { frameWidth: 32, frameHeight: 48 });
     //
@@ -171,6 +172,7 @@ function create() {
 
     this.physics.add.overlap(player, stars, collectStar, null, this);
     this.physics.add.collider(player, bombs, hitBomb, null, this);
+    this.physics.add.collider(player, badGuy, hitBomb, null, this);
 
     starSound = this.sound.add('starSound');
     bombSound = this.sound.add('bombSound');
@@ -232,7 +234,10 @@ function update() {
 
     // Bad Guy and Player collision detection
     this.physics.world.collide(player, badGuy, function () {
-        endGame();
+        health -= 100;
+        updateHealthBar();
+        bombSound.play();
+        //endGame();
     });
 
     // Update bad guy's animations based on velocity
@@ -244,6 +249,10 @@ function update() {
         badGuy.anims.play('badGuyTurn');
     }
     //
+    if (health <= 0) {
+        endGame();
+        return;
+    }
 }
 
 function collectStar(player, star) {
@@ -272,6 +281,7 @@ function hitBomb(player, bomb) {
         player.anims.play('turn');
         gameOver = true;
         replayButton.setVisible(true);
+        var winText = this.add.text(config.width / 2 - 100, config.height / 2 - 50, 'You Lose!', { fontSize: '32px', fill: '#fff' }).setScrollFactor(0);
     }
 }
 
@@ -321,13 +331,13 @@ function createMap() {
     platforms.create(1728+y, 770, 'platform2');
     platforms.create(1856+y, 770, 'platform3');
 
-    platforms.create(1000+y, 630, 'platform1');
-    platforms.create(1128+y, 630, 'platform2');
-    platforms.create(1256+y, 630, 'platform3');
+    platforms.create(1000+y, 620, 'platform1');
+    platforms.create(1128+y, 620, 'platform2');
+    platforms.create(1256+y, 620, 'platform3');
 
-    platforms.create(200+y, 630, 'platform1');
-    platforms.create(328+y, 630, 'platform2');
-    platforms.create(456+y, 630, 'platform3');
+    platforms.create(200+y, 620, 'platform1');
+    platforms.create(328+y, 620, 'platform2');
+    platforms.create(456+y, 620, 'platform3');
     }
     function resetGame() {
         score = 0;
@@ -345,4 +355,3 @@ function createMap() {
 
 
 }
-
